@@ -845,6 +845,7 @@ def check_min_weight_fraction_leaf(name):
                 "Failed with {0} min_weight_fraction_leaf={1}".format(
                     name, est.min_weight_fraction_leaf))
 
+
 @pytest.mark.parametrize('name', FOREST_ESTIMATORS)
 def test_min_weight_fraction_leaf(name):
     check_min_weight_fraction_leaf(name)
@@ -1080,7 +1081,7 @@ def check_warm_start(name, random_state=42):
     clf_no_ws.fit(X, y)
 
     assert (set([tree.random_state for tree in clf_ws]) ==
-                 set([tree.random_state for tree in clf_no_ws]))
+            set([tree.random_state for tree in clf_no_ws]))
 
     assert_array_equal(clf_ws.apply(X), clf_no_ws.apply(X),
                        err_msg="Failed with {0}".format(name))
@@ -1367,3 +1368,27 @@ def test_little_tree_with_small_max_samples(ForestClass):
 
     msg = "Tree without `max_samples` restriction should have more nodes"
     assert tree1.node_count > tree2.node_count, msg
+
+
+def test_rf_regressor_prediction_range():
+    # Create a Random Number Generator with 42 as a fixed seed.
+    rng = np.random.RandomState(42)
+
+    n_samples = 100
+    n_features = 10
+    X_train = rng.normal(size=(n_samples, n_features))
+    y_train = rng.normal(size=n_samples)
+
+    rfr = RandomForestRegressor(random_state=42)
+    rfr.fit(X_train, y_train)
+
+    y_min = np.min(y_train)
+    y_max = np.max(y_train)
+
+    n_samples_test = 10
+    X_test = rng.normal(size=(n_samples_test, n_features))
+
+    y_preds = rfr.predict(X_test)
+
+    assert np.min(y_preds) > y_min
+    assert np.max(y_preds) < y_max
